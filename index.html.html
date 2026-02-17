@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Insurance Claim System</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f2f2f7;
+}
+
+.app {
+    max-width: 420px;
+    margin: auto;
+    background: white;
+    min-height: 100vh;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+.header {
+    background: #ffffff;
+    padding: 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 18px;
+    border-bottom: 1px solid #ddd;
+}
+
+.screen {
+    display: none;
+    padding: 20px;
+}
+
+.active {
+    display: block;
+}
+
+input, select, button, textarea {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+button {
+    background: #007AFF;
+    color: white;
+    border: none;
+    font-weight: 600;
+}
+
+button.secondary {
+    background: #8e8e93;
+}
+
+button.danger {
+    background: #ff3b30;
+}
+
+.card {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.status {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.timeline {
+    font-size: 13px;
+    background: #fafafa;
+    padding: 10px;
+    border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<div class="header">AI Vehicle Insurance</div>
+
+<!-- ROLE SELECT -->
+<div class="screen active" id="roleScreen">
+<h3>Select Role</h3>
+<button onclick="setRole('policyholder')">Policyholder</button>
+<button onclick="setRole('adjuster')">Claims Adjuster</button>
+<button onclick="setRole('finance')">Finance Approver</button>
+</div>
+
+<!-- POLICYHOLDER WIZARD -->
+<div class="screen" id="claimWizard">
+
+<h3>Submit Claim</h3>
+
+<div id="step1">
+<input type="text" id="policyNumber" placeholder="Policy Number" required>
+<input type="date" id="incidentDate">
+<input type="text" id="reportedLocation" placeholder="Accident Location (Lat,Long)">
+<button onclick="nextStep(2)">Next</button>
+</div>
+
+<div id="step2" style="display:none;">
+<label>Upload Photos (Min 3)</label>
+<input type="file" id="photos" multiple accept="image/*">
+<button onclick="processAI()">Run AI Assessment</button>
+</div>
+
+<div id="aiResult" style="display:none;"></div>
+
+<div id="signatureSection" style="display:none;">
+<label><input type="checkbox" id="consent"> I consent to AI processing & GPS verification</label>
+<button onclick="policyholderSign()">Digital Sign & Submit</button>
+</div>
+
+</div>
+
+<!-- ADJUSTER DASHBOARD -->
+<div class="screen" id="adjusterDashboard">
+<h3>Adjuster Review</h3>
+<div id="adjusterContent"></div>
+</div>
+
+<!-- FINANCE DASHBOARD -->
+<div class="screen" id="financeDashboard">
+<h3>Finance Approval</h3>
+<div id="financeContent"></div>
+</div>
+
+<!-- STATUS TRACKING -->
+<div class="screen" id="statusScreen">
+<h3>Claim Status</h3>
+<div id="statusContent"></div>
+</div>
+
+</div>
+
+<script>
+let role = "";
+let claim = {
+    id: "CLM" + Math.floor(Math.random()*100000),
+    status: "Draft",
+    aiEstimate: 0,
+    fraudScore: 0,
+    gpsStatus: "",
+    confidence: 0,
+    audit: []
+};
+
+function setRole(r){
+    role = r;
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    if(r === "policyholder") document.getElementById('claimWizard').classList.add('active');
+    if(r === "adjuster") document.getElementById('adjusterDashboard').classList.add('active');
+    if(r === "finance") document.getElementById('financeDashboard').classList.add('active');
+}
+
+function nextStep(step){
+    document.getElementById("step1").style.display="none";
+    document.getElementById("step2").style.display="block";
+}
+
+function logEvent(event){
+    claim.audit.push(new Date().toLocaleString() + " - " + event);
+}
+
